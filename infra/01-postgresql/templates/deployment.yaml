@@ -42,7 +42,7 @@ spec:
             - name: POSTGRES_PASSWORD
               value: {{ .Values.postgresql.postgresPassword | quote }}
             - name: PGDATA
-              value: "/var/lib/postgresql/data/pgdata"
+              value: "/var/lib/postgresql/18/docker"
           ports:
             - name: postgresql
               containerPort: {{ .Values.service.port }}
@@ -55,7 +55,7 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
             - name: postgresql-data
-              mountPath: /var/lib/postgresql/data
+              mountPath:  /var/lib/postgresql/18/docker
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}

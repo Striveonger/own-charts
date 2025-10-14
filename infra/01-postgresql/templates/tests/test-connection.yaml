@@ -9,7 +9,7 @@ metadata:
 spec:
   containers:
     - name: pgtest
-      image: postgres:15.3
+      image: docker.io/postgres:18-trixie
       command: ['pg_isready']
       args: ['-h', 'postgresql', '-p', '{{ .Values.service.port }}', '-U', 'postgres']
       env:
