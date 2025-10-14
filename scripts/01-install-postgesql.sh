@@ -7,7 +7,7 @@
 #
 # install postgresql with helm
 #
-if helm upgrade --install postgresql infra/postgresql \
+if helm upgrade --install postgresql infra/01-postgresql \
     --create-namespace --namespace infra \
     --values infra/values/postgres.yaml
 then
@@ -16,6 +16,7 @@ else
     echo "Failed to install postgresql." && exit
 fi
 
+# Get the NOTES.txt output
+helm status postgresql -n infra
 
 # EOF
-

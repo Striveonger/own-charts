@@ -1,0 +1,17 @@
+# PostgreSQL specific values
+postgresql:
+  postgresPassword: "A123456a"
+
+# Resource configuration
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 5432
