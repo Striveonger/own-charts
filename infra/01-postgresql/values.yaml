@@ -84,7 +84,7 @@ resources:
 # PostgreSQL specific environment variables
 postgresql:
   postgresPassword: "123456"
-  pgData: ""
+  pgData: "/var/lib/postgresql/18/docker"
 
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
