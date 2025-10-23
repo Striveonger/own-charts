@@ -1,0 +1,31 @@
+dispatch-notice-api:
+  replicaCount: 1
+  image:
+    repository: "striveonger/dispatch-notice-api"
+    tag: "1.0.0"
+  probe:
+    enabled: true
+  env:
+    - name: SPRING_PROFILES_ACTIVE
+      value: "dev"
+
+dispatch-notice-ui:
+  replicaCount: 1
+  image:
+    repository: "striveonger/dispatch-notice-ui"
+    tag: "1.0.0"
+  ingress:
+    host: "dispatch-notice-ui-service.apps.svc.cluster.local"
+
+
+global:
+  config:
+    app:
+      spring:
+        datasource:
+          url: jdbc:postgresql://postgresql.infra.svc:5432/dispatch_notice
+          username: postgres
+          password: A123456a
+  log:
+    path: "/var/log/dispatch/notice"
+
