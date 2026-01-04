@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "minio-test-connection"
+  labels:
+    {{- include "minio.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: mc-test
+      image: minio/mc:latest
+      command: ['sh', '-c']
+      args:
+        - |
+          mc alias set minio http://minio:{{ .Values.service.apiPort }} {{ .Values.minio.rootUser }} {{ .Values.minio.rootPassword }} &&
+          mc admin info minio &&
+          echo "MinIO connection test passed!"
+      restartPolicy: Never

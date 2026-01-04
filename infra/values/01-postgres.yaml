@@ -1,4 +1,4 @@
-# PostgreSQL specific values
+# PostgreSQL specific values(default user: postgres)
 postgresql:
   postgresPassword: "A123456a"
 

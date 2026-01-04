@@ -9,7 +9,7 @@
 #
 if helm upgrade --install postgresql infra/01-postgresql \
     --create-namespace --namespace infra \
-    --values infra/values/postgres.yaml
+    --values infra/values/01-postgres.yaml
 then
     echo "Install postgresql successfully."
 else

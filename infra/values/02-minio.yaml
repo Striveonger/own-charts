@@ -1,0 +1,19 @@
+# MinIO environment-specific values
+
+# MinIO credentials (production should use Kubernetes Secrets)
+minio:
+  rootPassword: "A123456a"
+
+# Resource configuration
+resources:
+  limits:
+    memory: 1024Mi
+  requests:
+    memory: 512Mi
+
+# Persistence configuration
+persistence:
+  data:
+    size: 20Gi
+  config:
+    size: 1Gi
