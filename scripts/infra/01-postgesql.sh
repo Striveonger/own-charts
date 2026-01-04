@@ -1,8 +1,8 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-# source "${OPS_WORKSHOP}/scripts/functions.sh"
+# source 00-env.sh
 
-# pushd "${OPS_WORKSHOP}/infrastructure/charts/" || exit
+# pushd "${WORKSPACE}/infra/" || exit
 
 #
 # install postgresql with helm
@@ -19,4 +19,5 @@ fi
 # Get the NOTES.txt output
 helm status postgresql -n infra
 
+# popd || exit
 # EOF

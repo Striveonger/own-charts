@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# source 00-env.sh
+
+# pushd "${WORKSPACE}/infra/" || exit
+
 #
 # install minio with helm
 #
@@ -14,3 +18,6 @@ fi
 
 # Get the NOTES.txt output
 helm status minio -n infra
+
+# popd || exit
+# EOF
