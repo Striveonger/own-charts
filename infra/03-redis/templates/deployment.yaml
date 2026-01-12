@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "redis.fullname" . }}
+  labels:
+    {{- include "redis.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "redis.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "redis.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "redis.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: TZ
+              value: "Asia/Shanghai"
+          {{- if .Values.redis.useConfigFile }}
+          command:
+            - {{ .Values.redis.command }}
+            - {{ .Values.redis.configFile | quote }}
+          {{- if .Values.redis.password }}
+            - "--requirepass"
+            - {{ .Values.redis.password | quote }}
+          {{- end }}
+          {{- else }}
+          command:
+            - {{ .Values.redis.command }}
+            {{- if .Values.redis.password }}
+            - "--requirepass"
+            - {{ .Values.redis.password | quote }}
+            {{- end }}
+            - "--dir"
+            - {{ .Values.redis.dataDir | quote }}
+          {{- end }}
+          ports:
+            - name: redis
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          {{- if .Values.service.extraPorts }}
+            {{- range .Values.service.extraPorts }}
+            - name: {{ .name }}
+              containerPort: {{ .port }}
+              protocol: TCP
+            {{- end }}
+          {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: redis-data
+              mountPath: {{ .Values.redis.dataDir | quote }}
+          {{- if .Values.redis.useConfigFile }}
+            - name: redis-config
+              mountPath: {{ .Values.redis.configDir | quote }}
+          {{- end }}
+          {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        {{- if .Values.persistence.enabled }}
+        - name: redis-data
+          persistentVolumeClaim:
+            claimName: redis-pvc-data
+        {{- else }}
+        - name: redis-data
+          emptyDir: {}
+        {{- end }}
+      {{- if .Values.redis.useConfigFile }}
+        - name: redis-config
+          persistentVolumeClaim:
+            claimName: redis-pvc-config
+      {{- end }}
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

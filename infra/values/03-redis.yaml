@@ -1,0 +1,13 @@
+# Redis 环境配置覆盖
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 250m
+    memory: 128Mi
+
+# Redis 密码配置（生产环境应使用 Kubernetes Secrets）
+redis:
+  password: "A123456a"

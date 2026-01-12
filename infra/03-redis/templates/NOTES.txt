@@ -1,0 +1,20 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}
+
+Redis is now available at:
+
+  Service: {{ include "redis.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}
+
+To connect to Redis from another pod in the cluster:
+
+  $ kubectl run -it --rm redis-client --restart=Never --image=redis:{{ .Chart.AppVersion }} -- redis-cli -h {{ include "redis.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local -p {{ .Values.service.port }}{{ if .Values.redis.password }} -a {{ .Values.redis.password }}{{ end }}
+
+To check Redis status:
+
+  $ kubectl exec -it {{ .Release.Name }}-0 -n {{ .Release.Namespace }} -- redis-cli ping

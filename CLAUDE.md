@@ -18,16 +18,19 @@ charts/
 ├── infra/                          # 基础设施 Charts
 │   ├── 01-postgresql/             # PostgreSQL 数据库 Chart
 │   ├── 02-minio/                  # MinIO 对象存储 Chart
+│   ├── 03-redis/                  # Redis 缓存/数据库 Chart
 │   └── values/                    # 基础设施特定配置覆盖
 │       ├── 01-postgres.yaml
-│       └── 02-minio.yaml
+│       ├── 02-minio.yaml
+│       └── 03-redis.yaml
 ├── apps/                          # 应用 Charts（tgz 打包文件）
 │   └── values/                    # 应用特定配置覆盖
 │       └── dispatch-notice.yaml
 └── scripts/                       # 部署脚本
     ├── infra/                     # 基础设施部署脚本
     │   ├── 01-postgresql.sh
-    │   └── 02-minio.sh
+    │   ├── 02-minio.sh
+    │   └── 03-redis.sh
     └── apps/                      # 应用部署脚本
         └── 01-dispatch-notice.sh
 ```
@@ -64,6 +67,20 @@ helm upgrade --install minio infra/02-minio \
     --values infra/values/02-minio.yaml
 ```
 
+#### Redis
+
+```bash
+bash scripts/infra/03-redis.sh
+```
+
+或直接使用 Helm：
+
+```bash
+helm upgrade --install redis infra/03-redis \
+    --create-namespace --namespace infra \
+    --values infra/values/03-redis.yaml
+```
+
 ### 部署应用
 
 ```bash
@@ -84,6 +101,7 @@ helm upgrade --install dispatch-notice apps/dispatch-notice-1.0.0.tgz \
 # 检查基础设施部署
 helm status postgresql -n infra
 helm status minio -n infra
+helm status redis -n infra
 kubectl get pods -n infra
 
 # 检查应用部署
@@ -97,6 +115,7 @@ kubectl get pods -n apps
 # 卸载基础设施
 helm uninstall postgresql -n infra
 helm uninstall minio -n infra
+helm uninstall redis -n infra
 
 # 卸载应用
 helm uninstall dispatch-notice -n apps
@@ -125,6 +144,7 @@ Chart 采用两层配置方式：
 - 从应用访问 PostgreSQL：`postgresql.infra.svc.cluster.local:5432`
 - 从应用访问 MinIO API：`minio.infra.svc.cluster.local:9000`
 - 从应用访问 MinIO Console：`minio.infra.svc.cluster.local:9090`
+- 从应用访问 Redis：`redis.infra.svc.cluster.local:6379`
 - 命名空间内部服务：`{service-name}.{namespace}.svc.cluster.local`
 
 ### 模板约定
@@ -152,6 +172,15 @@ Chart 采用两层配置方式：
 - **命名空间**：`infra`
 - **默认凭据**：root / A123456a
 
+### Redis (infra/03-redis)
+
+- **镜像**：`redis:7.4.2-alpine`
+- **端口**：6379
+- **数据目录**：`/data`
+- **存储**：2Gi PVC
+- **命名空间**：`infra`
+- **默认密码**：A123456a
+
 ### Dispatch Notice (apps/)
 
 包含以下组件的复合应用：
@@ -174,6 +203,7 @@ Chart 采用两层配置方式：
 
 - PostgreSQL：使用 `pg_isready -U postgres` 进行存活性和就绪性探针
 - MinIO：使用 HTTP 端点 `/minio/health/live` 和 `/minio/health/ready`
+- Redis：使用 `redis-cli ping` 进行存活性和就绪性探针
 - Spring Boot 应用：使用 Actuator 端点（`/actuator/health/liveness`、`/actuator/health/readiness`）
 
 ### 连接配置
@@ -195,6 +225,14 @@ accessKey: root
 secretKey: A123456a
 ```
 
+#### Redis
+```yaml
+# 在应用的 values 中配置 Redis 连接
+host: redis.infra.svc.cluster.local
+port: 6379
+password: A123456a
+```
+
 ## 开发工作流
 
 1. 修改 `infra/values/*.yaml` 或 `apps/values/*.yaml` 中的 Chart 值
@@ -205,6 +243,7 @@ secretKey: A123456a
 
 - PostgreSQL 默认密码在 `infra/values/01-postgres.yaml` 中设置（生产环境应使用 Secrets）
 - MinIO 默认密码在 `infra/values/02-minio.yaml` 中设置（生产环境应使用 Secrets）
+- Redis 默认密码在 `infra/values/03-redis.yaml` 中设置（生产环境应使用 Secrets）
 - 应用日志使用 hostPath 挂载（生产环境建议使用日志解决方案）
 - Chart 独立版本管理 - 查看 `Chart.yaml` 获取版本信息
-- 部署顺序：先部署基础设施（如 PostgreSQL、MinIO），再部署依赖它的应用
+- 部署顺序：先部署基础设施（如 PostgreSQL、MinIO、Redis），再部署依赖它的应用
