@@ -28,6 +28,26 @@ spec:
       serviceAccountName: {{ include "redis.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+      {{- if .Values.redis.useConfigFile }}
+      - name: setup-config
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command:
+          - sh
+          - -c
+          - |
+            # 如果配置文件不存在，从 ConfigMap 复制
+            if [ ! -f {{ .Values.redis.configFile }} ]; then
+              cp /tmp/redis-config/redis.conf {{ .Values.redis.configFile }}
+            fi
+        volumeMounts:
+          - name: redis-config-tmp
+            mountPath: /tmp/redis-config
+            readOnly: true
+          - name: redis-config
+            mountPath: {{ .Values.redis.configDir }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -41,10 +61,6 @@ spec:
           command:
             - {{ .Values.redis.command }}
             - {{ .Values.redis.configFile | quote }}
-          {{- if .Values.redis.password }}
-            - "--requirepass"
-            - {{ .Values.redis.password | quote }}
-          {{- end }}
           {{- else }}
           command:
             - {{ .Values.redis.command }}
@@ -77,7 +93,7 @@ spec:
               mountPath: {{ .Values.redis.dataDir | quote }}
           {{- if .Values.redis.useConfigFile }}
             - name: redis-config
-              mountPath: {{ .Values.redis.configDir | quote }}
+              mountPath: {{ .Values.redis.configDir }}
           {{- end }}
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
@@ -92,6 +108,9 @@ spec:
           emptyDir: {}
         {{- end }}
       {{- if .Values.redis.useConfigFile }}
+        - name: redis-config-tmp
+          configMap:
+            name: {{ include "redis.fullname" . }}-config
         - name: redis-config
           persistentVolumeClaim:
             claimName: redis-pvc-config

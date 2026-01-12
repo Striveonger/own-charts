@@ -11,7 +11,7 @@ image:
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "7.4.2-alpine"
+  tag: "7.0.11"
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
@@ -39,7 +39,7 @@ podAnnotations: {}
 podLabels: {}
 
 podSecurityContext: {}
-  # fsGroup: 1000
+  # fsGroup: 999
 
 securityContext: {}
   # capabilities:
@@ -55,18 +55,91 @@ service:
   type: ClusterIP
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 6379
+  # Extra ports (e.g., for Redis cluster bus port)
+  extraPorts:
+    - name: redis-bus
+      port: 16379
 
 resources:
   limits:
-    cpu: 500m
-    memory: 256Mi
+    cpu: 750m
+    memory: 750Mi
   requests:
     cpu: 250m
-    memory: 128Mi
+    memory: 256Mi
 
 # Redis specific environment variables
 redis:
+  # Use custom configuration file
+  useConfigFile: true
+  # Config directory
+  configDir: "/etc/redis"
+  # Config file path
+  configFile: "/etc/redis/redis.conf"
+  # Redis configuration (inline)
+  # For production, use a ConfigMap or Secret
+  config: |
+    bind 0.0.0.0
+    protected-mode yes
+    port 6379
+    tcp-backlog 511
+    timeout 0
+    tcp-keepalive 300
+    daemonize no
+    supervised no
+    pidfile /var/run/redis_6379.pid
+    loglevel notice
+    logfile ""
+    databases 16
+    always-show-logo yes
+    save 900 1
+    save 300 10
+    save 60 10000
+    stop-writes-on-bgsave-error yes
+    rdbcompression yes
+    rdbchecksum yes
+    dbfilename dump.rdb
+    dir /data
+    replica-serve-stale-data yes
+    replica-read-only yes
+    repl-diskless-sync no
+    repl-diskless-sync-delay 5
+    repl-disable-tcp-nodelay no
+    replica-priority-server 100
+    maxmemory-policy noeviction
+    appendonly yes
+    appendfilename "appendonly.aof"
+    appendfsync everysec
+    no-appendfsync-on-rewrite no
+    auto-aof-rewrite-percentage 100
+    auto-aof-rewrite-min-size 64mb
+    aof-load-truncated yes
+    aof-use-rdb-preamble yes
+    lua-time-limit 5000
+    slowlog-log-slower-than 10000
+    slowlog-max-len 128
+    latency-monitor-threshold 0
+    notify-keyspace-events ""
+    hash-max-ziplist-entries 512
+    hash-max-ziplist-value 64
+    list-max-ziplist-size -2
+    list-compress-depth 0
+    set-max-intset-entries 512
+    zset-max-ziplist-entries 128
+    zset-max-ziplist-value 64
+    hll-sparse-max-bytes 3000
+    stream-node-max-bytes 4096
+    stream-node-max-entries 100
+    activerehashing yes
+    client-output-buffer-limit normal 0 0 0
+    client-output-buffer-limit replica 256mb 64mb 60
+    client-output-buffer-limit pubsub 32mb 8mb 60
+    hz 10
+    dynamic-hz yes
+    aof-rewrite-incremental-fsync yes
+    rdb-save-incremental-fsync yes
   # Redis password (leave empty for no password)
+  # Note: If using config file, password should be set in the config file
   password: ""
   # Data directory
   dataDir: "/data"
@@ -96,8 +169,10 @@ persistence:
   storageClass: ""
   # Access mode for PVC
   accessMode: ReadWriteOnce
-  # Size of PVC
-  size: 2Gi
+  # Size of data PVC
+  dataSize: 2Gi
+  # Size of config PVC
+  configSize: 1Gi
 
 # Additional volumes on the output Deployment definition.
 volumes: []
