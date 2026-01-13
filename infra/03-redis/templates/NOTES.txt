@@ -1,20 +1,14 @@
-Thank you for installing {{ .Chart.Name }}!
+Redis has been deployed successfully.
 
-Your release is named {{ .Release.Name }}.
+To connect to Redis:
 
-To learn more about the release, try:
+1. Run a Redis client pod:
+   kubectl run redis-client --rm -it --image=redis:7.0.11 --restart=Never -- redis-cli -h {{ include "redis.fullname" . }} -p {{ .Values.service.redisPort }}
 
-  $ helm status {{ .Release.Name }}
-  $ helm get all {{ .Release.Name }}
+2. Or use port-forward:
+   kubectl port-forward svc/{{ include "redis.fullname" . }} {{ .Values.service.redisPort }}:{{ .Values.service.redisPort }}
 
-Redis is now available at:
+The default password is: {{ .Values.redis.password }}
 
-  Service: {{ include "redis.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}
-
-To connect to Redis from another pod in the cluster:
-
-  $ kubectl run -it --rm redis-client --restart=Never --image=redis:{{ .Chart.AppVersion }} -- redis-cli -h {{ include "redis.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local -p {{ .Values.service.port }}{{ if .Values.redis.password }} -a {{ .Values.redis.password }}{{ end }}
-
-To check Redis status:
-
-  $ kubectl exec -it {{ .Release.Name }}-0 -n {{ .Release.Namespace }} -- redis-cli ping
+To check the pod status:
+   kubectl get pods -l app.kubernetes.io/name=redis

@@ -7,17 +7,13 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - port: {{ .Values.service.port }}
+    - name: redis
+      port: {{ .Values.service.redisPort }}
       targetPort: redis
       protocol: TCP
-      name: redis
-  {{- if .Values.service.extraPorts }}
-    {{- range .Values.service.extraPorts }}
-    - port: {{ .port }}
-      targetPort: {{ .name }}
+    - name: cluster
+      port: {{ .Values.service.clusterPort }}
+      targetPort: cluster
       protocol: TCP
-      name: {{ .name }}
-    {{- end }}
-  {{- end }}
   selector:
     {{- include "redis.selectorLabels" . | nindent 4 }}

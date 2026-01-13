@@ -5,7 +5,9 @@ metadata:
   labels:
     {{- include "redis.labels" . | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "redis.selectorLabels" . | nindent 6 }}
@@ -28,60 +30,27 @@ spec:
       serviceAccountName: {{ include "redis.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      initContainers:
-      {{- if .Values.redis.useConfigFile }}
-      - name: setup-config
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command:
-          - sh
-          - -c
-          - |
-            # 如果配置文件不存在，从 ConfigMap 复制
-            if [ ! -f {{ .Values.redis.configFile }} ]; then
-              cp /tmp/redis-config/redis.conf {{ .Values.redis.configFile }}
-            fi
-        volumeMounts:
-          - name: redis-config-tmp
-            mountPath: /tmp/redis-config
-            readOnly: true
-          - name: redis-config
-            mountPath: {{ .Values.redis.configDir }}
-      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - redis-server
+            - /etc/redis/redis.conf
+            - --requirepass
+            - {{ .Values.redis.password | quote }}
           env:
             - name: TZ
               value: "Asia/Shanghai"
-          {{- if .Values.redis.useConfigFile }}
-          command:
-            - {{ .Values.redis.command }}
-            - {{ .Values.redis.configFile | quote }}
-          {{- else }}
-          command:
-            - {{ .Values.redis.command }}
-            {{- if .Values.redis.password }}
-            - "--requirepass"
-            - {{ .Values.redis.password | quote }}
-            {{- end }}
-            - "--dir"
-            - {{ .Values.redis.dataDir | quote }}
-          {{- end }}
           ports:
             - name: redis
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ .Values.service.redisPort }}
               protocol: TCP
-          {{- if .Values.service.extraPorts }}
-            {{- range .Values.service.extraPorts }}
-            - name: {{ .name }}
-              containerPort: {{ .port }}
+            - name: cluster
+              containerPort: {{ .Values.service.clusterPort }}
               protocol: TCP
-            {{- end }}
-          {{- end }}
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
@@ -91,30 +60,19 @@ spec:
           volumeMounts:
             - name: redis-data
               mountPath: {{ .Values.redis.dataDir | quote }}
-          {{- if .Values.redis.useConfigFile }}
             - name: redis-config
-              mountPath: {{ .Values.redis.configDir }}
-          {{- end }}
+              mountPath: /etc/redis
+              readOnly: true
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
-        {{- if .Values.persistence.enabled }}
         - name: redis-data
           persistentVolumeClaim:
-            claimName: redis-pvc-data
-        {{- else }}
-        - name: redis-data
-          emptyDir: {}
-        {{- end }}
-      {{- if .Values.redis.useConfigFile }}
-        - name: redis-config-tmp
+            claimName: {{ include "redis.fullname" . }}-data-pvc
+        - name: redis-config
           configMap:
             name: {{ include "redis.fullname" . }}-config
-        - name: redis-config
-          persistentVolumeClaim:
-            claimName: redis-pvc-config
-      {{- end }}
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}

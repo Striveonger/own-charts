@@ -1,4 +1,3 @@
-{{- if .Values.redis.config }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -8,4 +7,3 @@ metadata:
 data:
   redis.conf: |
     {{- .Values.redis.config | nindent 4 }}
-{{- end }}

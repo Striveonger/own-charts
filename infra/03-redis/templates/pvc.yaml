@@ -1,37 +1,12 @@
-{{- if .Values.persistence.enabled }}
-# Data PVC
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: redis-pvc-data
+  name: {{ include "redis.fullname" . }}-data-pvc
   labels:
     {{- include "redis.labels" . | nindent 4 }}
 spec:
   accessModes:
-    - {{ .Values.persistence.accessMode }}
-  {{- if .Values.persistence.storageClass }}
-  storageClassName: {{ .Values.persistence.storageClass }}
-  {{- end }}
+    - {{ .Values.persistence.data.accessMode | default "ReadWriteOnce" }}
   resources:
     requests:
-      storage: {{ .Values.persistence.dataSize }}
----
-{{- if .Values.redis.useConfigFile }}
-# Config PVC
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: redis-pvc-config
-  labels:
-    {{- include "redis.labels" . | nindent 4 }}
-spec:
-  accessModes:
-    - {{ .Values.persistence.accessMode }}
-  {{- if .Values.persistence.storageClass }}
-  storageClassName: {{ .Values.persistence.storageClass }}
-  {{- end }}
-  resources:
-    requests:
-      storage: {{ .Values.persistence.configSize }}
-{{- end }}
-{{- end }}
+      storage: {{ .Values.persistence.data.size | default "2Gi" }}
