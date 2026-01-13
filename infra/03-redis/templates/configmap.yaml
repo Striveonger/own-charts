@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: {{ include "redis.fullname" . }}-config
   labels:
-    {{- include "redis.labels" . | nindent 4 }}
+{{- include "redis.labels" . | nindent 4 }}
 data:
   redis.conf: |
-    {{- .Values.redis.config | nindent 4 }}
+{{- include "redis.config" . | nindent 4 }}
