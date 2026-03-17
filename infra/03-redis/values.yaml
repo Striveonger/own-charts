@@ -62,7 +62,6 @@ redis:
   password: "A123456a"
   dataDir: "/data"
   configDir: "/etc/redis"
-
   config:
     # Network
     protectedMode: "yes"
