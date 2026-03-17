@@ -215,6 +215,8 @@ Chart 采用两层配置方式：
 # 在应用的 values 中配置数据库连接
 host: postgresql.infra.svc.cluster.local
 port: 5432
+user: postgres
+password: A123456a
 ```
 
 #### MinIO
