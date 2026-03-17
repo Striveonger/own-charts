@@ -1,0 +1,122 @@
+# Default values for MySQL.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: mysql
+  pullPolicy: IfNotPresent
+  tag: "8.0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 3306
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+resources:
+  limits:
+    memory: 1024Mi
+  requests:
+    memory: 512Mi
+
+# MySQL specific configuration
+mysql:
+  rootPassword: "A123456a"
+  database: "app_db"
+  user: "app_user"
+  password: "A123456a"
+  dataDir: "/var/lib/mysql"
+  configDir: "/etc/mysql/conf.d"
+  config:
+    # Network
+    bind-address: "0.0.0.0"
+    port: 3306
+
+    # Character Set
+    character-set-server: "utf8mb4"
+    collation-server: "utf8mb4_unicode_ci"
+
+    # Connection
+    max-connections: 200
+    max-connect-errors: 1000
+
+    # Timezone
+    default-time-zone: "+08:00"
+
+    # SQL Mode
+    sql-mode: "STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION"
+
+# Persistence configuration
+persistence:
+  data:
+    size: 10Gi
+    accessMode: ReadWriteOnce
+
+livenessProbe:
+  exec:
+    command:
+      - mysqladmin
+      - ping
+      - -u
+      - root
+      - -p${MYSQL_ROOT_PASSWORD}
+  initialDelaySeconds: 60
+  periodSeconds: 20
+
+readinessProbe:
+  exec:
+    command:
+      - mysqladmin
+      - ping
+      - -u
+      - root
+      - -p${MYSQL_ROOT_PASSWORD}
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+volumes: []
+volumeMounts: []
+nodeSelector: {}
+tolerations: []
+affinity: {}

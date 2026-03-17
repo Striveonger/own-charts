@@ -1,0 +1,18 @@
+MySQL has been deployed successfully.
+
+To connect to MySQL:
+
+1. Run a MySQL client pod:
+   kubectl run mysql-client --rm -it --image=mysql:8.0 --restart=Never -- mysql -h {{ include "mysql.fullname" . }} -P {{ .Values.service.port }} -u root -p
+
+2. Or use port-forward:
+   kubectl port-forward svc/{{ include "mysql.fullname" . }} {{ .Values.service.port }}:{{ .Values.service.port }}
+
+The default credentials are:
+  Root Password: {{ .Values.mysql.rootPassword }}
+  User: {{ .Values.mysql.user }}
+  Password: {{ .Values.mysql.password }}
+  Database: {{ .Values.mysql.database }}
+
+To check the pod status:
+   kubectl get pods -l app.kubernetes.io/name=mysql

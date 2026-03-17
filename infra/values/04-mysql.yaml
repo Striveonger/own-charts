@@ -1,0 +1,26 @@
+# MySQL values override for infrastructure deployment
+# This file contains environment-specific configuration
+# Other settings inherit from infra/04-mysql/values.yaml defaults
+
+# Resource limits
+resources:
+  limits:
+    memory: 1024Mi
+  requests:
+    memory: 512Mi
+
+#Persistence configuration
+persistence:
+  data:
+    size: 10Gi
+    accessMode: ReadWriteOnce
+
+# MySQL credentials (consider using secrets in production)
+mysql:
+  rootPassword: "A123456a"
+  database: "app_db"
+  user: "app_user"
+  password: "A123456a"
+  config:
+    max-connections: 500
+    innodb-buffer-pool-size: "512M"

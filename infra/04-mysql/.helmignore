@@ -1,0 +1,10 @@
+# Helm ignore patterns for MySQL chart
+*.log
+*.tmp
+*.swp
+*~
+.cache
+node_modules
+.git
+.gitignore
+README.md

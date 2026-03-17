@@ -1,0 +1,103 @@
+# Default values for RocketMQ.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: apache/rocketmq
+  pullPolicy: IfNotPresent
+  tag: "5.3.1"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# NameServer configuration
+nameserver:
+  port: 9876
+  resources:
+    limits:
+      memory: 512Mi
+    requests:
+      memory: 256Mi
+
+# Broker configuration
+broker:
+  port: 10911
+  listenerPort: 10911
+  resources:
+    limits:
+      memory: 2048Mi
+    requests:
+      memory: 1024Mi
+
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+# Persistence configuration
+persistence:
+  data:
+    size: 10Gi
+    accessMode: ReadWriteOnce
+
+livenessProbe:
+  exec:
+    command:
+      - bash
+      - -c
+      - "netstat -an | grep :9876 || netstat -an | grep :10911"
+  initialDelaySeconds: 60
+  periodSeconds: 20
+
+readinessProbe:
+  exec:
+    command:
+      - bash
+      - -c
+      - "netstat -an | grep :9876 || netstat -an | grep :10911"
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+volumes: []
+volumeMounts: []
+nodeSelector: {}
+tolerations: []
+affinity: {}

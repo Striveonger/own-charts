@@ -19,10 +19,14 @@ charts/
 │   ├── 01-postgresql/             # PostgreSQL 数据库 Chart
 │   ├── 02-minio/                  # MinIO 对象存储 Chart
 │   ├── 03-redis/                  # Redis 缓存/数据库 Chart
+│   ├── 04-mysql/                  # MySQL 数据库 Chart
+│   └── 05-rocketmq/               # RocketMQ 消息队列 Chart
 │   └── values/                    # 基础设施特定配置覆盖
 │       ├── 01-postgres.yaml
 │       ├── 02-minio.yaml
-│       └── 03-redis.yaml
+│       ├── 03-redis.yaml
+│       ├── 04-mysql.yaml
+│       └── 05-rocketmq.yaml
 ├── apps/                          # 应用 Charts（tgz 打包文件）
 │   └── values/                    # 应用特定配置覆盖
 │       └── dispatch-notice.yaml
@@ -30,7 +34,9 @@ charts/
     ├── infra/                     # 基础设施部署脚本
     │   ├── 01-postgresql.sh
     │   ├── 02-minio.sh
-    │   └── 03-redis.sh
+    │   ├── 03-redis.sh
+    │   ├── 04-mysql.sh
+    │   └── 05-rocketmq.sh
     └── apps/                      # 应用部署脚本
         └── 01-dispatch-notice.sh
 ```
@@ -81,6 +87,34 @@ helm upgrade --install redis infra/03-redis \
     --values infra/values/03-redis.yaml
 ```
 
+#### MySQL
+
+```bash
+bash scripts/infra/04-mysql.sh
+```
+
+或直接使用 Helm：
+
+```bash
+helm upgrade --install mysql infra/04-mysql \
+    --create-namespace --namespace infra \
+    --values infra/values/04-mysql.yaml
+```
+
+#### RocketMQ
+
+```bash
+bash scripts/infra/05-rocketmq.sh
+```
+
+或直接使用 Helm：
+
+```bash
+helm upgrade --install rocketmq infra/05-rocketmq \
+    --create-namespace --namespace infra \
+    --values infra/values/05-rocketmq.yaml
+```
+
 ### 部署应用
 
 ```bash
@@ -102,6 +136,8 @@ helm upgrade --install dispatch-notice apps/dispatch-notice-1.0.0.tgz \
 helm status postgresql -n infra
 helm status minio -n infra
 helm status redis -n infra
+helm status mysql -n infra
+helm status rocketmq -n infra
 kubectl get pods -n infra
 
 # 检查应用部署
@@ -116,6 +152,8 @@ kubectl get pods -n apps
 helm uninstall postgresql -n infra
 helm uninstall minio -n infra
 helm uninstall redis -n infra
+helm uninstall mysql -n infra
+helm uninstall rocketmq -n infra
 
 # 卸载应用
 helm uninstall dispatch-notice -n apps
@@ -145,11 +183,16 @@ Chart 采用两层配置方式：
 - 从应用访问 MinIO API：`minio.infra.svc.cluster.local:9000`
 - 从应用访问 MinIO Console：`minio.infra.svc.cluster.local:9090`
 - 从应用访问 Redis：`redis.infra.svc.cluster.local:6379`
+- 从应用访问 MySQL：`mysql.infra.svc.cluster.local:3306`
+- 从应用访问 RocketMQ NameServer：`rocketmq-ns.infra.svc.cluster.local:9876`
+- 从应用访问 RocketMQ Broker：`rocketmq-broker.infra.svc.cluster.local:10911`
 - 命名空间内部服务：`{service-name}.{namespace}.svc.cluster.local`
 
 ### 模板约定
 
 - PostgreSQL 使用 `_helpers.tpl` 定义标签和命名模板
+- Redis 使用 `_redis-config.tpl` 生成 redis.conf 配置文件
+- MySQL 使用 `_mysql-config.tpl` 生成 my.cnf 配置文件
 - 应用使用 `_volume.tpl` 和 `_probe.tpl` 复用卷和探针模板
 
 ## 当前 Charts
@@ -181,6 +224,23 @@ Chart 采用两层配置方式：
 - **命名空间**：`infra`
 - **默认密码**：A123456a
 
+### MySQL (infra/04-mysql)
+
+- **镜像**：`mysql:8.0`
+- **端口**：3306
+- **数据目录**：`/var/lib/mysql`
+- **存储**：10Gi PVC
+- **命名空间**：`infra`
+- **默认密码**：A123456a (root)
+
+### RocketMQ (infra/05-rocketmq)
+
+- **镜像**：`apache/rocketmq:5.3.1`
+- **NameServer 端口**：9876
+- **Broker 端口**：10911
+- **存储**：10Gi PVC
+- **命名空间**：`infra`
+
 ### Dispatch Notice (apps/)
 
 包含以下组件的复合应用：
@@ -204,6 +264,8 @@ Chart 采用两层配置方式：
 - PostgreSQL：使用 `pg_isready -U postgres` 进行存活性和就绪性探针
 - MinIO：使用 HTTP 端点 `/minio/health/live` 和 `/minio/health/ready`
 - Redis：使用 `redis-cli ping` 进行存活性和就绪性探针
+- MySQL：使用 `mysqladmin ping` 进行存活性和就绪性探针
+- RocketMQ：使用 `netstat` 检查端口监听状态
 - Spring Boot 应用：使用 Actuator 端点（`/actuator/health/liveness`、`/actuator/health/readiness`）
 
 ### 连接配置
@@ -235,6 +297,23 @@ port: 6379
 password: A123456a
 ```
 
+#### MySQL
+```yaml
+# 在应用的 values 中配置数据库连接
+host: mysql.infra.svc.cluster.local
+port: 3306
+user: root
+password: A123456a
+database: app_db
+```
+
+#### RocketMQ
+```yaml
+# 在应用的 values 中配置 RocketMQ 连接
+nameserver: rocketmq-ns.infra.svc.cluster.local:9876
+broker: rocketmq-broker.infra.svc.cluster.local:10911
+```
+
 ## 开发工作流
 
 1. 修改 `infra/values/*.yaml` 或 `apps/values/*.yaml` 中的 Chart 值
@@ -246,6 +325,8 @@ password: A123456a
 - PostgreSQL 默认密码在 `infra/values/01-postgres.yaml` 中设置（生产环境应使用 Secrets）
 - MinIO 默认密码在 `infra/values/02-minio.yaml` 中设置（生产环境应使用 Secrets）
 - Redis 默认密码在 `infra/values/03-redis.yaml` 中设置（生产环境应使用 Secrets）
+- MySQL 默认密码在 `infra/values/04-mysql.yaml` 中设置（生产环境应使用 Secrets）
+- RocketMQ 无需认证（生产环境建议配置 ACL）
 - 应用日志使用 hostPath 挂载（生产环境建议使用日志解决方案）
 - Chart 独立版本管理 - 查看 `Chart.yaml` 获取版本信息
-- 部署顺序：先部署基础设施（如 PostgreSQL、MinIO、Redis），再部署依赖它的应用
+- 部署顺序：先部署基础设施（如 PostgreSQL、MinIO、Redis、MySQL、RocketMQ），再部署依赖它的应用
