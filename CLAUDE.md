@@ -186,6 +186,8 @@ Chart 采用两层配置方式：
 - 从应用访问 MySQL：`mysql.infra.svc.cluster.local:3306`
 - 从应用访问 RocketMQ NameServer：`rocketmq-ns.infra.svc.cluster.local:9876`
 - 从应用访问 RocketMQ Broker：`rocketmq-broker.infra.svc.cluster.local:10911`
+- 从应用访问 RocketMQ Proxy：`rocketmq-proxy.infra.svc.cluster.local:8080`
+- 从应用访问 RocketMQ Dashboard：`rocketmq-dashboard.infra.svc.cluster.local:8082`
 - 命名空间内部服务：`{service-name}.{namespace}.svc.cluster.local`
 
 ### 模板约定
