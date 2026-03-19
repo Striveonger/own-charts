@@ -1,0 +1,245 @@
+clusterName: "rocketmq"
+
+image:
+  repository: "apache/rocketmq"
+  tag: "5.3.2"
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+podSecurityContext:
+  fsGroup: 3000
+  runAsUser: 3000
+
+broker:
+  size:
+    master: 1
+    replica: 0
+  
+  # podSecurityContext: {}
+  # containerSecurityContext: {}
+  
+  master:
+    brokerRole: SYNC_MASTER
+    jvm:
+      maxHeapSize: 1024M
+      # javaOptsOverride: ""
+    resources:
+      limits:
+        cpu: 4
+        memory: 16Gi
+      requests:
+        cpu: 200m
+        memory: 2Gi
+  
+  replica:
+    jvm:
+      maxHeapSize: 1024M
+      # javaOptsOverride: ""
+    resources:
+      limits:
+        cpu: 4
+        memory: 16Gi
+      requests:
+        cpu: 50m
+        memory: 2Gi
+
+  hostNetwork: false
+
+  persistence:
+    enabled: true
+    size: 20Gi
+    #storageClass: "gp2"
+  
+  aclConfigMapEnabled: false
+  aclConfig: |
+    globalWhiteRemoteAddresses:
+      - '*'
+
+  config:
+    ## brokerClusterName brokerName brokerRole brokerId 由内置脚本自动生成
+    deleteWhen: "04"
+    fileReservedTime: "48"
+    flushDiskType: "ASYNC_FLUSH"
+    waitTimeMillsInSendQueue: "1000"
+    # aclEnable: true
+
+  affinityOverride: {}
+  tolerations: []
+  nodeSelector: {}
+
+  ## broker.readinessProbe
+  readinessProbe:
+    tcpSocket:
+      port: main
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 6
+
+nameserver:
+  replicaCount: 1
+
+  jvm:
+    maxHeapSize: 600M
+    # javaOptsOverride: ""
+
+  resources:
+    limits:
+      cpu: 2
+      memory: 6Gi
+      ephemeral-storage: 8Gi
+    requests:
+      cpu: 100m
+      memory: 1Gi
+      ephemeral-storage: 1Gi
+  
+  persistence:
+    enabled: false
+    size: 20Gi
+    #storageClass: "gp2"
+
+  affinityOverride: {}
+  tolerations: []
+  nodeSelector: {}
+
+  ## nameserver.readinessProbe
+  readinessProbe:
+    tcpSocket:
+      port: main
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 6
+
+  ## nameserver.service
+  service:
+    annotations: {}
+    type: ClusterIP
+
+proxy:
+  enabled: true
+  replicaCount: 1
+  jvm:
+    maxHeapSize: 600M
+    # javaOptsOverride: ""
+
+  resources:
+    limits:
+      cpu: 2
+      memory: 6Gi
+    requests:
+      cpu: 100m
+      memory: 1Gi
+
+  affinityOverride: {}
+  tolerations: []
+  nodeSelector: {}
+
+  ## proxy.readinessProbe
+  readinessProbe:
+    tcpSocket:
+      port: main
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 6
+
+  ## proxy.service
+  service:
+    annotations: {}
+    type: ClusterIP
+
+dashboard:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: "apacherocketmq/rocketmq-dashboard"
+    pullPolicy: IfNotPresent
+    tag: "2.1.0"
+
+  containerPort: 8082
+
+  auth:
+    enabled: true
+    users:
+      - name: admin
+        password: admin
+        isAdmin: true
+      - name: user01
+        password: userPass
+
+  jvm:
+    maxHeapSize: 256M
+
+  resources:
+    limits:
+      cpu: 1
+      memory: 2Gi
+    requests:
+      cpu: 20m
+      memory: 512Mi
+
+  ## dashboard.readinessProbe
+  readinessProbe:
+    failureThreshold: 6
+    httpGet:
+      path: /
+      port: http
+  livenessProbe: {}
+  
+  service:
+    annotations: {}
+    type: ClusterIP
+    # nodePort: 31007
+  
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+      # nginx.ingress.kubernetes.io/whitelist-source-range: 10.0.0.0/8,124.160.30.50
+    hosts:
+      - host: rocketmq-dashboard.example.com
+    tls: []
+    #  - secretName: example-tls
+    #    hosts:
+    #      - rocketmq-dashboard.example.com
+
+## controller mode is an experimental feature
+controllerModeEnabled: false
+controller:
+  enabled: true
+  replicaCount: 1
+  jvm:
+    maxHeapSize: 600M
+    # javaOptsOverride: ""
+  resources:
+    limits:
+      cpu: 2
+      memory: 6Gi
+    requests:
+      cpu: 100m
+      memory: 1Gi
+  persistence:
+    enabled: true
+    size: 20Gi
+    accessModes:
+      - ReadWriteOnce
+  
+  ## controller.service
+  service:
+    annotations: {}
+  
+  ## controller.config
+  config:
+    controllerDLegerGroup: group1
+    enableElectUncleanMaster: false
+    notifyBrokerRoleChanged: true
+  
+  ## controller.readinessProbe
+  readinessProbe:
+    tcpSocket:
+      port: main
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 6

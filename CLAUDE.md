@@ -235,11 +235,21 @@ Chart 采用两层配置方式：
 
 ### RocketMQ (infra/05-rocketmq)
 
-- **镜像**：`apache/rocketmq:5.3.1`
+- **Chart 版本**：12.6.0 (appVersion: 5.3.2)
+- **镜像**：`apache/rocketmq:5.3.2`
 - **NameServer 端口**：9876
 - **Broker 端口**：10911
-- **存储**：10Gi PVC
+- **Proxy 端口**：8080 (启用)
+- **Dashboard 端口**：8082 (启用)
+- **存储**：Broker 20Gi PVC，Controller 20Gi PVC
 - **命名空间**：`infra`
+- **组件**：
+  - NameServer (1 副本)
+  - Broker (1 主 0 从，SYNC_MASTER)
+  - Proxy (1 副本)
+  - Dashboard (1 副本，管理界面)
+  - Controller (1 副本，集群模式)
+- **默认凭据**：Dashboard admin/admin
 
 ### Dispatch Notice (apps/)
 
@@ -265,7 +275,8 @@ Chart 采用两层配置方式：
 - MinIO：使用 HTTP 端点 `/minio/health/live` 和 `/minio/health/ready`
 - Redis：使用 `redis-cli ping` 进行存活性和就绪性探针
 - MySQL：使用 `mysqladmin ping` 进行存活性和就绪性探针
-- RocketMQ：使用 `netstat` 检查端口监听状态
+- RocketMQ：使用 `netstat` 检查端口监听状态 (NameServer/9876, Broker/10911, Proxy/8080)
+- Dashboard：使用 HTTP 端点 `/` 进行健康检查
 - Spring Boot 应用：使用 Actuator 端点（`/actuator/health/liveness`、`/actuator/health/readiness`）
 
 ### 连接配置
@@ -312,6 +323,10 @@ database: app_db
 # 在应用的 values 中配置 RocketMQ 连接
 nameserver: rocketmq-ns.infra.svc.cluster.local:9876
 broker: rocketmq-broker.infra.svc.cluster.local:10911
+proxy: rocketmq-proxy.infra.svc.cluster.local:8080
+
+# Dashboard 访问 (集群IP)
+dashboard: rocketmq-dashboard.infra.svc.cluster.local:8082
 ```
 
 ## 开发工作流
@@ -326,7 +341,9 @@ broker: rocketmq-broker.infra.svc.cluster.local:10911
 - MinIO 默认密码在 `infra/values/02-minio.yaml` 中设置（生产环境应使用 Secrets）
 - Redis 默认密码在 `infra/values/03-redis.yaml` 中设置（生产环境应使用 Secrets）
 - MySQL 默认密码在 `infra/values/04-mysql.yaml` 中设置（生产环境应使用 Secrets）
-- RocketMQ 无需认证（生产环境建议配置 ACL）
+- RocketMQ Dashboard 访问地址：`http://rocketmq-dashboard.infra.svc.cluster.local:8082`
+- 默认管理员账号：admin / admin
+- 默认普通用户账号：user01 / userPass
 - 应用日志使用 hostPath 挂载（生产环境建议使用日志解决方案）
 - Chart 独立版本管理 - 查看 `Chart.yaml` 获取版本信息
 - 部署顺序：先部署基础设施（如 PostgreSQL、MinIO、Redis、MySQL、RocketMQ），再部署依赖它的应用

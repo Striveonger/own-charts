@@ -1,0 +1,10 @@
+
+dashboard:
+  enabled: true
+  containerPort: 8082
+  auth:
+    enabled: true
+    users:
+      - name: admin
+        password: admin
+        isAdmin: true
