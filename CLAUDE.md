@@ -340,6 +340,108 @@ proxy: rocketmq-proxy.infra.svc.cluster.local:8080
 dashboard: rocketmq-dashboard.infra.svc.cluster.local:8082
 ```
 
+## Helm 常用命令
+
+### Chart 管理
+
+```bash
+# 创建新 Chart
+helm create <name>
+
+# 验证 Chart 语法
+helm lint <chart>
+
+# 打包 Chart 为 tgz
+helm package <chart>
+
+# 查看 Chart 完整信息
+helm show all <chart>
+
+# 查看 Chart 默认 values
+helm show values <chart>
+
+# 下载远程 Chart
+helm pull <chart>
+
+# 构建 Chart 依赖
+helm dependency build <chart>
+
+# 更新 Chart 依赖
+helm dependency update <chart>
+```
+
+### Release 管理
+
+```bash
+# 安装 Chart
+helm install <name> <chart>
+
+# 升级 Release
+helm upgrade <name> <chart>
+
+# 幂等安装/升级（已存在则升级，不存在则安装）
+helm upgrade --install <name> <chart>
+
+# 卸载 Release
+helm uninstall <name>
+
+# 列出所有 Release
+helm list
+
+# 查看 Release 状态
+helm status <name>
+
+# 查看 Release 升级历史
+helm history <name>
+```
+
+### 本地调试
+
+```bash
+# 本地渲染模板
+helm template <name> <chart>
+
+# 调试模式渲染（显示生成的 manifest）
+helm template <name> <chart> --debug
+```
+
+### Repo 管理
+
+```bash
+# 添加 Chart Repo
+helm repo add <name> <url>
+
+# 更新 Repo
+helm repo update
+
+# 列出已添加的 Repo
+helm repo list
+
+# 移除 Repo
+helm repo remove <name>
+
+# 搜索 Repo 中的 Chart
+helm search repo <keyword>
+```
+
+### Values 管理
+
+```bash
+# 查看 Chart 默认 values
+helm show values <chart>
+
+# 查看已部署 Release 的 values
+helm get values <release>
+
+# 查看 Release 所有信息
+helm get all <release>
+
+# 查看 Release 的 Hooks
+helm get hooks <release>
+```
+
+> 参考: https://helm.sh/zh/docs/v3/intro/CheatSheet
+
 ## 开发工作流
 
 1. 修改 `infra/values/*.yaml` 或 `apps/values/*.yaml` 中的 Chart 值
