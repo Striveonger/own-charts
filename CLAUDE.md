@@ -28,17 +28,16 @@ charts/
 │       ├── 04-mysql.yaml
 │       └── 05-rocketmq.yaml
 ├── apps/                          # 应用 Charts（tgz 打包文件）
-│   └── values/                    # 应用特定配置覆盖
-│       └── dispatch-notice.yaml
+│   └── values/                    # 应用特定配置覆盖目录
 └── scripts/                       # 部署脚本
     ├── infra/                     # 基础设施部署脚本
+    │   ├── 00-env.sh              # 环境变量配置
     │   ├── 01-postgresql.sh
     │   ├── 02-minio.sh
     │   ├── 03-redis.sh
     │   ├── 04-mysql.sh
     │   └── 05-rocketmq.sh
-    └── apps/                      # 应用部署脚本
-        └── 01-dispatch-notice.sh
+    └── apps/                      # 应用部署脚本（需先打包 Chart）
 ```
 
 ## 部署命令
@@ -117,13 +116,13 @@ helm upgrade --install rocketmq infra/05-rocketmq \
 
 ### 部署应用
 
-```bash
-bash scripts/apps/01-dispatch-notice.sh
-```
-
-或直接使用 Helm：
+应用部署需要先将 Chart 打包为 tgz 文件，再进行部署：
 
 ```bash
+# 打包应用 Chart（如 dispatch-notice）
+helm package apps/dispatch-notice
+
+# 部署应用
 helm upgrade --install dispatch-notice apps/dispatch-notice-1.0.0.tgz \
     --create-namespace --namespace apps \
     --values apps/values/dispatch-notice.yaml
@@ -140,8 +139,8 @@ helm status mysql -n infra
 helm status rocketmq -n infra
 kubectl get pods -n infra
 
-# 检查应用部署
-helm status dispatch-notice -n apps
+# 检查应用部署（如已部署）
+helm status <app-name> -n apps
 kubectl get pods -n apps
 ```
 
@@ -155,8 +154,8 @@ helm uninstall redis -n infra
 helm uninstall mysql -n infra
 helm uninstall rocketmq -n infra
 
-# 卸载应用
-helm uninstall dispatch-notice -n apps
+# 卸载应用（如已部署）
+helm uninstall <app-name> -n apps
 ```
 
 ## Chart 架构
@@ -219,12 +218,13 @@ Chart 采用两层配置方式：
 
 ### Redis (infra/03-redis)
 
-- **镜像**：`redis:7.4.2-alpine`
+- **镜像**：`redis:7.0.11`
 - **端口**：6379
 - **数据目录**：`/data`
 - **存储**：2Gi PVC
 - **命名空间**：`infra`
 - **默认密码**：A123456a
+- **配置**：使用 `_redis-config.tpl` 生成 redis.conf，支持通过 `values.yaml` 灵活配置
 
 ### MySQL (infra/04-mysql)
 
@@ -255,13 +255,22 @@ Chart 采用两层配置方式：
 
 ### Dispatch Notice (apps/)
 
-包含以下组件的复合应用：
-- **dispatch-notice-api**：Spring Boot API（端口 18081）
-- **dispatch-notice-ui**：前端 UI（端口 80）
-
-使用 ConfigMap 挂载配置到 `/opt/app/configs`，日志挂载到 `/var/log/dispatch/notice`。
+预留的应用部署位置，当前 `apps/` 目录仅包含 `values/` 子目录用于存放应用配置覆盖文件。
 
 ## 常见模式
+
+### Helm Chart 验证
+
+```bash
+# 验证 Chart 语法和配置
+helm lint infra/01-postgresql
+
+# 模板渲染测试（不实际部署）
+helm template test-release infra/01-postgresql --values infra/values/01-postgres.yaml
+
+# 调试模式（显示生成的 manifest）
+helm template test-release infra/01-postgresql --debug --values infra/values/01-postgres.yaml
+```
 
 ### 幂等部署
 
