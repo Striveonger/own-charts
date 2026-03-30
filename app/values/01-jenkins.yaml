@@ -45,7 +45,7 @@ controller:
     repository: "jenkins/jenkins"
 
     # -- Controller image tag override; i.e., tag: "2.440.1-jdk21"
-    tag:
+    tag: "2.556"
 
     # -- Controller image tag label
     tagLabel: jdk21
@@ -87,7 +87,7 @@ controller:
     username: "admin"
     # -- Admin password created as a secret if `controller.admin.createSecret` is true
     # @default -- <random password>
-    password: 
+    password: "A123456a" 
 
     # -- The key in the existing admin secret containing the username
     userKey: jenkins-admin-user

@@ -1,0 +1,83 @@
+{{ template "chart.header" . }}
+
+{{ template "chart.description" . }}
+
+## TL;DR
+
+```bash
+helm repo add kubelauncher https://kubelauncher.github.io/charts
+helm install my-rmq kubelauncher/rabbitmq \
+  --set auth.password=secret
+```
+
+Or via OCI:
+
+```bash
+helm install my-rmq oci://ghcr.io/kubelauncher/charts/rabbitmq \
+  --set auth.password=secret
+```
+
+## Introduction
+
+This chart deploys RabbitMQ on Kubernetes using the [kubelauncher/rabbitmq](https://github.com/kubelauncher/docker) Docker image. Management UI and Prometheus plugin are enabled by default.
+
+The values structure follows the same conventions as popular community charts, allowing easy migration.
+
+## Architecture
+
+### Single node (default)
+
+A single RabbitMQ node with the management plugin enabled on port `15672`.
+
+```bash
+helm install my-rmq kubelauncher/rabbitmq \
+  --set auth.username=admin \
+  --set auth.password=secret
+```
+
+### Cluster
+
+Multiple RabbitMQ nodes forming an Erlang cluster with automatic peer discovery via Kubernetes. Increase `replicaCount` to deploy a cluster.
+
+```bash
+helm install my-rmq kubelauncher/rabbitmq \
+  --set auth.username=admin \
+  --set auth.password=secret \
+  --set replicaCount=3 \
+  --set clustering.enabled=true
+```
+
+Clustering uses hostname-based addressing with `autoheal` partition handling by default. All nodes share the same Erlang cookie for authentication.
+
+> **Warning:** RabbitMQ clusters do not survive simultaneous full restarts. When all nodes restart at the same time, each node waits for the others' Mnesia tables, causing a deadlock. Always use **rolling restarts** (`kubectl rollout restart`) rather than deleting all pods at once. If a full restart occurs accidentally, delete one pod at a time and wait for it to rejoin the cluster before deleting the next.
+
+{{ template "chart.requirementsSection" . }}
+
+## Installing the Chart
+
+```bash
+helm repo add kubelauncher https://kubelauncher.github.io/charts
+helm install my-rmq kubelauncher/rabbitmq \
+  --set auth.username=admin \
+  --set auth.password=secret \
+  --set replicaCount=3
+```
+
+Or via OCI:
+
+```bash
+helm install my-rmq oci://ghcr.io/kubelauncher/charts/rabbitmq \
+  --set auth.username=admin \
+  --set auth.password=secret \
+  --set replicaCount=3
+```
+
+## Uninstalling the Chart
+
+```bash
+helm uninstall my-rmq
+```
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "chart.maintainersSection" . }}

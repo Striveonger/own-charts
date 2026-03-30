@@ -1,0 +1,12 @@
+image:
+  registry: docker.io
+  repository: kubelauncher/rabbitmq
+  tag: "4.2.5"
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+
+auth:
+  username: "admin"
+  password: "A123456a"
+  
