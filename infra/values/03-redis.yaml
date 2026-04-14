@@ -1,24 +1,12 @@
-# Redis values override for infrastructure deployment
-# This file contains environment-specific configuration
-# Other settings inherit from infra/03-redis/values.yaml defaults
+global:
+  redis:
+    password: "A123456a"
+image:
+  registry: "docker.io"
+  repository: "bitnami/redis"
+  tag: "8.6.2"
+  pullPolicy: "IfNotPresent"
 
-# Enable persistence with custom storage size
-persistence:
-  data:
-    size: 2Gi
-    accessMode: ReadWriteOnce
-
-# Resource limits matching the Docker command
-resources:
-  limits:
-    memory: 750Mi
-  requests:
-    memory: 256Mi
-
-# Redis password (consider using secrets in production)
-redis:
-  password: "A123456a"
-  config:
-    databases: 8
-    appendonly: "yes"
-
+## @param architecture Redis(R) architecture. Allowed values: `standalone` or `replication`
+##
+architecture: "standalone"
