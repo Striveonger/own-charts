@@ -3,6 +3,6 @@
 #
 # export workspace as environment
 #
-WORKSPACE=$(realpath "$(dirname "$0")/../..")
+WORKSPACE=$(realpath "$(dirname "$0")/..")
 export WORKSPACE
-
+echo "$WORKSPACE"
