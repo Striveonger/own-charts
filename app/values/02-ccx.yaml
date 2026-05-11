@@ -1,0 +1,7 @@
+# Values for ccx
+
+replicaCount: 1
+
+env:
+  PROXY_ACCESS_KEY: "A123456a"
+

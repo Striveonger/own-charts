@@ -1,0 +1,42 @@
+# Default values for ccx.
+
+replicaCount: 1
+
+image:
+  repository: crpi-i19l8zl0ugidq97v.cn-hangzhou.personal.cr.aliyuncs.com/bene/ccx
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+env:
+  PROXY_ACCESS_KEY: "A123456a"
+  APP_UI_LANGUAGE: "zh-CN"
+
+# 持久化配置
+persistence:
+  enabled: true
+  mountPath: "/app/.config"
+  hostPath: "/Users/striveonger/development/workspace/docker/volume/ccx/.config"
+  accessMode: ReadWriteOnce
+  size: 1Gi
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: 3000
+  initialDelaySeconds: 30
+  periodSeconds: 120
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: 3000
+  initialDelaySeconds: 30
+  periodSeconds: 120

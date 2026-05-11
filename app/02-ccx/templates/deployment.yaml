@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ccx.fullname" . }}
+  labels:
+    {{- include "ccx.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ccx.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ccx.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: PROXY_ACCESS_KEY
+              value: {{ .Values.env.PROXY_ACCESS_KEY | quote }}
+            - name: APP_UI_LANGUAGE
+              value: {{ .Values.env.APP_UI_LANGUAGE | quote }}
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: config
+              mountPath: {{ .Values.persistence.mountPath }}
+          {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: config
+          hostPath:
+            path: {{ .Values.persistence.hostPath }}
+            type: Directory
+      {{- end }}

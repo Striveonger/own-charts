@@ -1,0 +1,12 @@
+apiVersion: v2
+name: ccx
+description: Ai-Agents 代理工具
+type: application
+version: 0.1.0
+appVersion: "latest"
+
+keywords:
+  - ccx
+  - ai-agents
+
+home: https://github.com/ai-agents/ccx
