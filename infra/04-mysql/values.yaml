@@ -7,7 +7,7 @@ replicaCount: 1
 image:
   repository: mysql
   pullPolicy: IfNotPresent
-  tag: "8.0"
+  tag: "8.4.9"
 
 imagePullSecrets: []
 nameOverride: ""

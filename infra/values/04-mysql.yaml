@@ -18,8 +18,8 @@ persistence:
 # MySQL credentials (consider using secrets in production)
 mysql:
   rootPassword: "A123456a"
-  database: "app_db"
-  user: "app_user"
+  database: "own_app"
+  user: "own_app"
   password: "A123456a"
   config:
     max-connections: 500

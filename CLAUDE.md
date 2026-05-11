@@ -19,18 +19,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── 03-redis/                  # Redis 缓存
 │   ├── 04-mysql/                  # MySQL
 │   ├── 05-rocketmq/               # RocketMQ 消息队列
+│   ├── 06-rabbitmq/               # RabbitMQ 消息队列
 │   └── values/                    # 基础设施配置覆盖
 │       ├── 01-postgres.yaml
 │       ├── 02-minio.yaml
 │       ├── 03-redis.yaml
 │       ├── 04-mysql.yaml
-│       └── 05-rocketmq.yaml
+│       ├── 05-rocketmq.yaml
+│       └── 06-rabbitmq.yaml
 ├── app/                            # 应用 Charts
 │   ├── 01-jenkins/                 # Jenkins
+│   ├── 02-ccx/                     # Ai-Agents 代理工具
 │   └── values/                     # 应用配置覆盖
-└── scripts/                        # 部署脚本
-    ├── infra/                      # 基础设施部署脚本
-    └── app/                        # 应用部署脚本
+├── scripts/                        # 部署脚本
+│   ├── infra/                      # 基础设施部署脚本
+│   └── app/                        # 应用部署脚本
+└── tmp/                            # 草稿 Charts（不参与提交，仅用于测试）
+    └── <chart-draft>/              # 开发中的 Chart 版本
 ```
 
 ## 部署命令
@@ -45,6 +50,7 @@ bash scripts/infra/02-minio.sh        # MinIO
 bash scripts/infra/03-redis.sh        # Redis
 bash scripts/infra/04-mysql.sh        # MySQL
 bash scripts/infra/05-rocketmq.sh     # RocketMQ
+bash scripts/infra/06-rabbitmq.sh     # RabbitMQ
 ```
 
 ### 应用部署
@@ -90,6 +96,8 @@ Chart 采用两层配置方式：
 | RocketMQ Broker | `rocketmq-broker.infra.svc.cluster.local:10911` |
 | RocketMQ Proxy | `rocketmq-proxy.infra.svc.cluster.local:8080` |
 | RocketMQ Dashboard | `rocketmq-dashboard.infra.svc.cluster.local:8082` |
+| RabbitMQ Management | `rabbitmq.infra.svc.cluster.local:15672` |
+| RabbitMQ AMQP | `rabbitmq.infra.svc.cluster.local:5672` |
 
 ## 健康检查
 
@@ -132,3 +140,4 @@ helm package apps/<chart-name>
 - **Jenkins**: `admin` / `A123456a`
 
 生产环境应使用 Kubernetes Secrets 管理这些凭据。
+
