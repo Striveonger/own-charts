@@ -2,6 +2,9 @@
 
 replicaCount: 1
 
+image:
+  repository: "striveonger/ccx"
+  tag: "2.6.83"
+
 env:
   PROXY_ACCESS_KEY: "A123456a"
-

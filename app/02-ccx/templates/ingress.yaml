@@ -1,0 +1,28 @@
+# IngressRoute：配置 /v1/responses 路径重写规则
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "ccx.fullname" . }}-responses
+  namespace: {{ .Release.Namespace }}
+spec:
+  routes:
+    - match: Host(`ccx.app.svc.cluster.local`) && PathPrefix(`/v1/responses`)
+      kind: Rule
+      services:
+        - kind: Service
+          name: {{ include "ccx.fullname" . }}
+          namespace: {{ .Release.Namespace }}
+          port: 80
+      middlewares:
+        - name: {{ include "ccx.fullname" . }}-rewrite
+---
+# 路径重写中间件：将 /v1/responses 转发到 /v1/chat
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "ccx.fullname" . }}-rewrite
+  namespace: {{ .Release.Namespace }}
+spec:
+  replacePathRegex:
+    regex: "^/v1/responses"
+    replacement: "/v1/chat"
